@@ -8,6 +8,9 @@
         <link href='http://fonts.googleapis.com/css?family=Lato' rel='stylesheet' type='text/css'>
 <style>
 
+  svg text {
+      font-family: 'Lato', 'sans-serif';
+  }
 
   #chart {
     height: 650px;
@@ -26,17 +29,16 @@
     pointer-events: none;
     text-shadow: 0 1px 0 #fff;
     font-size: 12px;
-    font-family: 'Lato', 'sans-serif';
-
   }
 
   .link {
     fill: none;
     stroke: #000;
     stroke-opacity: .2;
+    transition: stroke-opacity 0.3s;
   }
 
-  .link:hover {
+  .link.highlight {
     stroke-opacity: .5;
   }
 
@@ -51,7 +53,7 @@
 <h3>Source: <a href="https://data.oaklandnet.com/Financial/City-of-Oakland-Adopted-Policy-Budget-FY13-15/vmzx-e5fe">data.oaklandnet.com</a></h3>
 
 <div id="sankey">
-      <p id="chart"></p>
+      <div id="chart"></div>
 </div>
 
 
@@ -63,7 +65,7 @@
 
 <script>
 
-var margin = {top: 1, right: 1, bottom: 6, left: 1},
+var margin = {top: 20, right: 1, bottom: 6, left: 1},
     width = 1200 - margin.left - margin.right,
     height = 700 - margin.top - margin.bottom;
 
@@ -73,8 +75,20 @@ var formatNumber = d3.format(",.0f"),
 
 var svg = d3.select("#chart").append("svg")
     .attr("width", width + margin.left + margin.right)
-    .attr("height", height + margin.top + margin.bottom)
-    .append("g")
+    .attr("height", height + margin.top + margin.bottom);
+
+svg.append("text")
+    .text("Revenues")
+    .attr("y", margin.top * 0.6)
+    .attr("x", margin.left);
+
+svg.append("text")
+    .text("Expenses")
+    .attr("y", margin.top * 0.6)
+    .attr("x", margin.left + width)
+    .attr("text-anchor", "end");
+
+var chart = svg.append("g")
     .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
 
 var sankey = d3.sankey()
@@ -92,7 +106,7 @@ function do_with_budget(data) {
       .links(data.links)
       .layout(0);
 
-  var link = svg.append("g").selectAll(".link")
+  var link = chart.append("g").selectAll(".link")
       .data(data.links)
     .enter().append("path")
       .attr("class", "link")
@@ -102,14 +116,20 @@ function do_with_budget(data) {
       .sort(function(a, b) {
           return b.dy - a.dy;
           })
-      .on("mouseover", function(d){$("#hover_description").append($("<span>" + d.source.name + " to " + d.target.name + ":  " + format(d.value) + "</span>"));})
-      .on("mouseout", function(){$("#hover_description").find("span:last").remove();});;
+      .on("mouseover", function(d){
+        d3.select(this).classed("highlight", true);
+        //   $("#hover_description").append($("<span>" + d.source.name + " to " + d.target.name + ":  " + format(d.value) + "</span>"));
+      })
+      .on("mouseout", function(){
+        d3.select(this).classed("highlight", false)
+        //   $("#hover_description").find("span:last").remove();
+      });;
 
   link.append("title")
       .text(function(d) { return d.source.name + " → " + d.target.name + "\n" + format(d.value); })
 
 
-  var node = svg.append("g").selectAll(".node")
+  var node = chart.append("g").selectAll(".node")
       .data(data.nodes)
     .enter().append("g")
       .attr("class", "node")
@@ -121,6 +141,16 @@ function do_with_budget(data) {
       .attr("width", sankey.nodeWidth())
       .style("fill", function(d) { return d.color = color(d.name.replace(/ .*/, "")); })
       .style("stroke", function(d) { return d3.rgb(d.color).darker(2); })
+      .on("click", function(d){
+          link.classed('highlight', function(link_d){
+              if ([link_d.target.name, link_d.source.name].indexOf(d.name) >= 0) {
+                  if (d3.select(this).classed("highlight")) { return false; }
+                  return true;
+              } else {
+                  return false;
+              }
+          })
+      })
     .append("title")
       .text(function(d) { return d.name + "\n" + format(d.value); });
 
