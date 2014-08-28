@@ -153,15 +153,15 @@ d3.sankey = function() {
   }
 
   function computeNodeDepths(iterations) {
-    var nodesByBreadth = d3.nest()
+    nodesByBreadth = d3.nest()
         .key(function(d) { return d.x; })
         .sortKeys(d3.ascending)
         .entries(nodes)
         .map(function(d) { return d.values; });
 
-    //
     initializeNodeDepth();
     resolveCollisions();
+    centerFunds();
     for (var alpha = 1; iterations > 0; --iterations) {
       relaxRightToLeft(alpha *= .99);
       resolveCollisions();
@@ -251,6 +251,20 @@ d3.sankey = function() {
 
     function ascendingDepth(a, b) {
       return a.y - b.y;
+    }
+
+    // custom placement of Funds
+    function centerFunds(){
+      // figure out leftover vertical space
+      var funds = nodesByBreadth[2];
+      var vpad = sankey.size()[1] - sankey.nodePadding();
+      funds.forEach(function(node, i) {
+          vpad -= node.dy;
+      });
+
+      // space funds out more
+      funds[0].y += vpad / 3;
+      funds[1].y += (vpad / 3) * 2
     }
   }
 
