@@ -47,8 +47,8 @@
     </head>
     <body>
 
-<h2>City of Oakland Proposed Policy Budget 2013-15</h2>
-<h3>Source: <a href="https://data.oaklandnet.com/Financial/City-of-Oakland-Proposed-Policy-Budget-FY2013-15/b8mb-8tti#column-menu">data.oaklandnet.com</a></h3>
+<h2>City of Oakland Adopted Policy Budget 2013-15</h2>
+<h3>Source: <a href="https://data.oaklandnet.com/Financial/City-of-Oakland-Adopted-Policy-Budget-FY13-15/vmzx-e5fe">data.oaklandnet.com</a></h3>
 
 <div id="sankey">
       <p id="chart"></p>
@@ -85,20 +85,23 @@ var sankey = d3.sankey()
 var path = sankey.link();
 
 // Changed to budget
-function do_with_budget(energy) {
+function do_with_budget(data) {
 
   sankey
-      .nodes(energy.nodes)
-      .links(energy.links)
-      .layout(32);
+      .nodes(data.nodes)
+      .links(data.links)
+      .layout(0);
 
   var link = svg.append("g").selectAll(".link")
-      .data(energy.links)
+      .data(data.links)
     .enter().append("path")
       .attr("class", "link")
       .attr("d", path)
-      .style("stroke-width", function(d) { return Math.max(1, d.dy); })
-      .sort(function(a, b) { return b.dy - a.dy; })
+      .style("stroke-width", function(d) {
+          return Math.max(1, d.dy); })
+      .sort(function(a, b) {
+          return b.dy - a.dy;
+          })
       .on("mouseover", function(d){$("#hover_description").append($("<span>" + d.source.name + " to " + d.target.name + ":  " + format(d.value) + "</span>"));})
       .on("mouseout", function(){$("#hover_description").find("span:last").remove();});;
 
@@ -107,7 +110,7 @@ function do_with_budget(energy) {
 
 
   var node = svg.append("g").selectAll(".node")
-      .data(energy.nodes)
+      .data(data.nodes)
     .enter().append("g")
       .attr("class", "node")
       .attr("transform", function(d) { return "translate(" + d.x + "," + d.y + ")"; })
@@ -140,15 +143,24 @@ $.get("./js/oakland_v2.json", function(data){
 */
 
 // new data
-d3.csv("rows.csv", function(error, data){
+d3.csv("City_of_Oakland_Adopted_Policy_Budget_FY13-15.csv", function(error, data){
     // console.log("loaded");
     newdata = data;
+    rev_order = ["Property Tax", "Business License Tax", "Sales Tax",
+        "Utility Consumption Tax", "Real Estate Transfer Tax",
+        "Fines & Penalties", "Parking Tax", "Transient Occupancy Tax",
+        "Service Charges",
+         "Transfers from Fund Balance", "Miscellaneous Revenue", "Interest Income", "Licenses & Permits",
+        "Interfund Transfers", "Grants & Subsidies","Local Tax",  "Internal Service Funds", "Gas Tax",];
     rev = newdata.filter(function(v,i,a){
         return v.account_type == "Revenue";
     });
     revcats = d3.nest()
         .key(function(d){
             return d.account_category;
+        })
+        .sortKeys(function(a,b){
+            return rev_order.indexOf(a) - rev_order.indexOf(b);
         })
         .key(function(d){
             if (d.fund_code == "1010") {
@@ -160,12 +172,12 @@ d3.csv("rows.csv", function(error, data){
         .rollup(function(v){
             var values = v;
             values.total = d3.sum(values, function(d){
-                return d.amount;
+                return +d.amount;
             });
             return values;
         })
         .entries(rev);
-    nodes = [{"name": "General Fund"}, {"name": "Non-discretionary funds"}];
+    nodes = [{"name": "General Fund", "type": "fund", "order": 0}, {"name": "Non-discretionary funds", "type": "fund", "order": 1}];
     nodeoffset = nodes.length;
     links = [];
     for (var i = 0; i < revcats.length; i++){
@@ -187,9 +199,31 @@ d3.csv("rows.csv", function(error, data){
     exp = newdata.filter(function(v,i,a){
         return v.account_type == "Expense";
     });
+    exp_order = [
+        "Police Department",
+        "Fire Department",
+        "Public Works",
+        "Community Services",
+        "Administrative Services",
+        "Capital Improvement Projects",
+        "City Council",
+        "City Administrator",
+        "Planning & Building",
+        "City Auditor",
+        "Library",
+        "City Attorney",
+        "Housing & Community Development",
+        "City Clerk",
+        "Library",
+        "Mayor",
+        "Non-Departmental"
+    ];
     expdivs = d3.nest()
         .key(function(d){
-            return d.division;
+            return d.department;
+        })
+        .sortKeys(function(a,b){
+            return exp_order.indexOf(a) - exp_order.indexOf(b);
         })
         .key(function(d){
             if (d.fund_code == "1010") {
