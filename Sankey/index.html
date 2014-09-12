@@ -8,8 +8,11 @@
         <link href='http://fonts.googleapis.com/css?family=Arvo' rel='stylesheet' type='text/css'>
 <style>
 
-  svg text {
+  body {
       font-family: 'Arvo', 'sans-serif';
+  }
+  h1,h2,h3,h4,h5,h6 {
+      font-weight:normal;
   }
 
   #chart {
@@ -21,7 +24,6 @@
     opacity: 0;
     padding: 8px;
     background-color: #dfdfdf;
-    font-family: 'Arvo', 'sans-serif';
     visibility: hidden;
     transition: visibility 0s 0.1s,opacity 0.1s;
     font-size: 14px;
@@ -29,18 +31,29 @@
 
   #hover_description.show {
       visibility: visible;
-      opacity: 0.8;
+      opacity: 0.85;
       transition-delay: 0s;
   }
 
   .node rect {
     fill-opacity: .9;
     shape-rendering: crispEdges;
+    stroke-width: 1px;
+    transition: stroke-width 0.1s;
   }
 
   .node text {
     pointer-events: none;
     font-size: 12px;
+    transition: font-size 0.3s;
+  }
+
+  .node.highlight text {
+      font-size: 15px;
+  }
+
+  .node.highlight rect {
+      stroke-width:2px;
   }
 
   .link {
@@ -57,12 +70,22 @@
     color: red;
   }
 </style>
-    </head>
-    <body>
+</head>
+<body>
 
 <h2>City of Oakland Adopted Policy Budget 2013-15</h2>
 <h3>Source: <a href="https://data.oaklandnet.com/Financial/City-of-Oakland-Adopted-Policy-Budget-FY13-15/vmzx-e5fe">data.oaklandnet.com</a></h3>
 
+<p>
+    This diagram depicts the flow of money through Oakland's budget: from revenue
+    sources (on the left), to the General Fund or various non-discretionary funds
+    (in the center), and finally to the various city departments' expenses (on the
+    right).
+</p>
+<p>
+    Mouse over a flow line to highlight it; click on a bar to highlight all its
+    flows.
+</p>
 <div id="sankey">
       <div id="chart"></div>
 </div>
@@ -212,7 +235,9 @@ function do_with_budget(data) {
             .style({"top": (d3.event.y - 10) + "px", "left": (d3.event.x + 10) + "px"});
       })
       .on("mouseout", function(){
-        d3.select(this).classed("highlight", false)
+        d3.select(this).classed("highlight", function(){
+            return d3.select(this).classed('click');
+        })
         d3.select("#hover_description")
             .classed("show", false);
       });
@@ -240,14 +265,30 @@ function do_with_budget(data) {
       })
       .style("stroke", function(d) { return d3.rgb(d.color).darker(1); })
       .on("click", function(d){
-          link.classed('highlight', function(link_d){
+          var thisnode = d3.select(this.parentNode);
+          if (thisnode.classed("highlight")) {
+              thisnode.classed("highlight", false);
+          } else {
+            //   node.classed("highlight", false);
+              thisnode.classed("highlight", true);
+          }
+
+          link.classed('highlight click', function(link_d){
               if ([link_d.target.name, link_d.source.name].indexOf(d.name) >= 0) {
-                  if (d3.select(this).classed("highlight")) { return false; }
-                  return true;
+                  return thisnode.classed("highlight");
               } else {
-                  return false;
+                  return d3.select(this).classed("click");
               }
-          })
+          });
+
+          thisnode.select("text").transition()
+            .text(function(d){
+                var text = d.name;
+                if (thisnode.classed('highlight')) {
+                    text += ': ' + format(d.value);
+                }
+                return text;
+            });
       });
 
   node.append("text")
@@ -322,24 +363,27 @@ d3.csv("City_of_Oakland_Adopted_Policy_Budget_FY13-15.csv", function(error, data
     exp_order = [
         "Police Department",
         "Fire Department",
-        "Administrative Services",
-        "Community Services",
-        "Capital Improvement Projects",
         "City Council",
+        "Administrative Services",
+        "City Auditor",
+        "Community Services",
+        "City Clerk",
+        "Capital Improvement Projects",
+        "Mayor",
         "City Administrator",
         "Planning & Building",
-        "City Auditor",
         "Library",
         "City Attorney",
         "Housing & Community Development",
-        "City Clerk",
         "Library",
-        "Mayor",
         "Public Works",
-        "Non-Departmental"
+        "Debt Service & Misc."
     ];
     expdivs = d3.nest()
         .key(function(d){
+            if (d.department == "Non-Departmental") {
+                return "Debt Service & Misc."
+            }
             return d.department;
         })
         .sortKeys(function(a,b){
