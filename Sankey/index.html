@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>v1 Sankey update</title>
+    <script type="text/javascript" src="js/d3.js"></script>
+    <link type="text/css" rel="stylesheet" href="colorbrewer/colorbrewer.css"/>
+    <link href='http://fonts.googleapis.com/css?family=Arvo' rel='stylesheet' type='text/css'/>
+    <link href='css/style.css' rel='stylesheet' type='text/css'/>
+</head>
+<body>
+
+<h2>The Oakland City Budget</h2>
+<h3>Source: <a href="https://data.oaklandnet.com/Financial/City-of-Oakland-Adopted-Policy-Budget-FY13-15/vmzx-e5fe">data.oaklandnet.com</a></h3>
+
+<p>
+    This diagram depicts the flow of money through Oakland's budget: from revenue
+    sources (on the left), to the General Fund or various non-discretionary funds
+    (in the center), and finally to the various city departments' expenses (on the
+    right).
+</p>
+<p>
+    Mouse over a flow line to highlight it; click on a bar to highlight all its
+    flows.
+</p>
+<h3>Fiscal Year: 2013-14</h3>
+<div id="sankey">
+      <div id="chart"></div>
+</div>
+<div id="hover_description"></div>
+
+<!-- Sankey JS -->
+<script src="./js/d3.min.js"></script>
+<script src="./js/sankey.js"></script>
+<script src="./js/jquery-1.11.0.min.js"></script>
+
+
+<script src="js/oakland.js"></script>
+    </body>
+</html>
