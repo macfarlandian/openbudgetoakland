@@ -1,104 +1,3 @@
-<!DOCTYPE html>
-<html lang="en">
-    <head>
-        <meta charset="utf-8">
-        <title>v1 Sankey update</title>
-        <script type="text/javascript" src="js/d3.js"></script>
-        <link type="text/css" rel="stylesheet" href="colorbrewer/colorbrewer.css"/>
-        <link href='http://fonts.googleapis.com/css?family=Arvo' rel='stylesheet' type='text/css'>
-<style>
-
-  body {
-      font-family: 'Arvo', 'sans-serif';
-  }
-  h1,h2,h3,h4,h5,h6 {
-      font-weight:normal;
-  }
-
-  #chart {
-    height: 650px;
-  }
-
-  #hover_description {
-    position: absolute;
-    opacity: 0;
-    padding: 8px;
-    background-color: #dfdfdf;
-    visibility: hidden;
-    transition: visibility 0s 0.1s,opacity 0.1s;
-    font-size: 14px;
-  }
-
-  #hover_description.show {
-      visibility: visible;
-      opacity: 0.85;
-      transition-delay: 0s;
-  }
-
-  .node rect {
-    fill-opacity: .9;
-    shape-rendering: crispEdges;
-    stroke-width: 1px;
-    transition: stroke-width 0.1s;
-  }
-
-  .node text {
-    pointer-events: none;
-    font-size: 12px;
-    transition: font-size 0.3s;
-  }
-
-  .node.highlight text {
-      font-size: 15px;
-  }
-
-  .node.highlight rect {
-      stroke-width:2px;
-  }
-
-  .link {
-    fill: none;
-    stroke-opacity: .2;
-    transition: stroke-opacity 0.3s;
-  }
-
-  .link.highlight {
-    stroke-opacity: .6;
-  }
-
-  #warning{
-    color: red;
-  }
-</style>
-</head>
-<body>
-
-<h2>City of Oakland Adopted Policy Budget 2013-15</h2>
-<h3>Source: <a href="https://data.oaklandnet.com/Financial/City-of-Oakland-Adopted-Policy-Budget-FY13-15/vmzx-e5fe">data.oaklandnet.com</a></h3>
-
-<p>
-    This diagram depicts the flow of money through Oakland's budget: from revenue
-    sources (on the left), to the General Fund or various non-discretionary funds
-    (in the center), and finally to the various city departments' expenses (on the
-    right).
-</p>
-<p>
-    Mouse over a flow line to highlight it; click on a bar to highlight all its
-    flows.
-</p>
-<div id="sankey">
-      <div id="chart"></div>
-</div>
-<div id="hover_description"></div>
-
-<!-- Sankey JS -->
-<script src="./js/d3.min.js"></script>
-<script src="./js/sankey.js"></script>
-<script src="./js/jquery-1.11.0.min.js"></script>
-
-
-<script>
-
 var margin = {top: 20, right: 1, bottom: 6, left: 1},
     width = 1200 - margin.left - margin.right,
     height = 700 - margin.top - margin.bottom;
@@ -232,7 +131,10 @@ function do_with_budget(data) {
       })
       .on("mousemove", function(d){
           d3.select("#hover_description")
-            .style({"top": (d3.event.y - 10) + "px", "left": (d3.event.x + 10) + "px"});
+            .style({
+                    "top": (d3.event.y - 10 + $(window).scrollTop()) + "px",
+                    "left": (d3.event.x + 10) + "px"
+                    });
       })
       .on("mouseout", function(){
         d3.select(this).classed("highlight", function(){
@@ -306,7 +208,7 @@ function do_with_budget(data) {
 // new data
 d3.csv("City_of_Oakland_Adopted_Policy_Budget_FY13-15.csv", function(error, data){
     // console.log("loaded");
-    newdata = data;
+    newdata = data.filter(function(v){ return v.budget_year == "FY13-14"});
     rev_order = ["Property Tax", "Business License Tax", "Sales Tax",
         "Utility Consumption Tax", "Real Estate Transfer Tax",
         "Fines & Penalties", "Parking Tax", "Transient Occupancy Tax",
@@ -423,7 +325,3 @@ d3.csv("City_of_Oakland_Adopted_Policy_Budget_FY13-15.csv", function(error, data
     oakland_data = {"nodes": nodes, "links": links};
     do_with_budget(oakland_data);
 });
-
-</script>
-    </body>
-</html>
