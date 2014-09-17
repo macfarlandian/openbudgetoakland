@@ -10,7 +10,7 @@
 </head>
 <body>
 
-<h2>The Oakland City Budget</h2>
+<h2>The Oakland City Budget: How Money Flows</h2>
 <h3>Source: <a href="https://data.oaklandnet.com/Financial/City-of-Oakland-Adopted-Policy-Budget-FY13-15/vmzx-e5fe">data.oaklandnet.com</a></h3>
 
 <p>
@@ -23,18 +23,23 @@
     Mouse over a flow line to highlight it; click on a bar to highlight all its
     flows.
 </p>
-<h3>Fiscal Year: 2013-14</h3>
+<h3>Fiscal Year:
+    <select id="fy">
+        <option value="FY13-14">2013-14</option>
+        <option value="FY14-15">2014-15</option>
+    </select>
+</h3>
 <div id="sankey">
       <div id="chart"></div>
 </div>
 <div id="hover_description"></div>
 
-<!-- Sankey JS -->
+<!-- JS libraries -->
 <script src="./js/d3.min.js"></script>
 <script src="./js/sankey.js"></script>
 <script src="./js/jquery-1.11.0.min.js"></script>
 
-
+<!-- make the sankey -->
 <script src="js/oakland.js"></script>
     </body>
 </html>
